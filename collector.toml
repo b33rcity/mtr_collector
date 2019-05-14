@@ -1,0 +1,130 @@
+##############################################################################
+# MTR Collector configuration                                                #
+#                                                                            #
+# If you are not familiar with the TOML configuration format, please see     #
+# https://github.com/toml-lang/toml#user-content-example for full details.   #
+#  TL;DR -- Sections are headed by "[title]"; each section is a table and    #
+#  corresponds to a dictionary/associative array entry, with "title" being   #
+#  the key; fields in a table can be referenced with dot notation--eg.       #
+#  key.field = value is the same as                                          #
+#     [key]                                                                  #
+#     field = value                                                          #
+#  and this corresponds to JSON                                              #
+#    {                                                                       #
+#      "key": { "field": "value" }                                           #
+#    }                                                                       #
+#                                                                            #
+# All fields are required unless otherwise stated.                           #
+#                                                                            #
+# You may include format arguments in string values and they will be         #
+# interpreted by Python --                                                   #
+#       {target}                => The host tested                           #
+#       {monitors}              => An array of hosts running the test        #
+#       {tests}                 => An array of tests received                #
+#       {tests[x]["monitor"]}   => The host which ran test #x                #
+#       {tests[x]["mtr"]}       => The actual data from test #x              #
+# ** Note: these only really make sense in a couple places, namely           #
+#    webhook.options or webhook.data.body.intro.                             #
+##############################################################################
+
+####
+# The IP and TCP port that the server should bind to.
+####
+[collector]
+ip = "127.0.0.1"
+port = "22123"
+
+####
+# Paths to the TLS files.
+# The cacrt field must be set to a copy of the CA certificate used to sign
+# the clients' certificates. This is for *authentication* in addition to
+# encryption--do NOT use the standard CA and chain certs that come up with
+# OpenSSL.
+#
+# The server will not run without TLS configured!
+####
+[tls]
+cert = ""
+key = ""
+cacrt = ""
+
+####
+# Configure a webhook-based receiver.
+# The key field is optional here. If it is not provided, you must provide any
+# API keys directly in the authorization header below.
+####
+[webhook]
+url = ""
+# Optional API key. Can be formatted automatically or directly set in the
+# the headers table.
+#key = ""
+
+####
+# Set the headers for authentication and Content-Type.
+# Slack bots are happy with Python's default Content-Type header;
+# Slack webhooks seem to prefer the "application/json" type for
+# plain text content. Refer to the appropriate documentation to
+# determine the appropriate settings here.
+####
+[webhook.headers]
+Authorization = ""
+## Python defaults to "Content-Type: application/x-www-form-urlencoded"
+## if not otherwise specified below:
+#Content-Type = "application/json"
+
+####
+# These settings will be used in the data sent to the
+# webhook. "label" fields will become parameters in the URL
+# (if using x-www-form-urlencoded) or JSON keys.
+# This:
+#   channels.label = "channels"
+#   channels.list = "1234,ABCD"
+# becomes:
+#    &channels=1234%2CABCD
+# or:
+#   { ...
+#     "channels": ["1234", "ABCD"],
+#     ...
+#   }
+#
+# The "body" fields other than "label" are optional. If given,
+# the server will concatenate them around the actual MTR data
+# according to whether the field is the "intro" or "close".
+#
+# Hopefully this provides enough built-in flexibility that
+# this server can be used with more than just Slack.
+####
+[webhook.data]
+channels.label = "channels"
+# Specify multiple channels as CSV rather than array
+channels.list = ""
+body.label = "content"
+#body.intro =
+#body.close =
+
+####
+# Additional custom fields may be given and will be
+# included in the data stream sent to the webhook.
+# Refer to the API documentation of your chosen webhook to
+# see what options make sense here.
+####
+[webhook.options]
+initial_comment = "*MTRs to {target}*"
+
+####
+# Configure email settings
+#
+# If you don't want this server to email you, simply leave everything
+# blank and accept that it will log every failure to bug you by email.
+####
+[mail]
+# An SMTP-enabled server to use. Add :<port> if you don't want
+# the default SMTP-over-TLS port (465). May be localhost.
+server = ''
+# Optional SMTP credentials, as <user,password>
+#smtp_login = "user,pw"
+# envelope-from
+from = ''
+# envelope-to
+to = ''
+

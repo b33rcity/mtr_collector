@@ -1,0 +1,25 @@
+A client must interact with the Collector according to the following rules:
+
+  1. The client must initiate an encrypted, TLS1.2 or highter connection. The client's
+     certificate is required to be signed by a specific CA.
+
+  2. The client's message must include a preamble of the following format:
+        PREAMBLE            ::= MONITOR_HOSTNAME\nTARGET_HOSTNAME\nTIMESTAMP\nNOTICE_METHOD\n
+        MONITOR_HOSTNAME    ::= <FQDN of the Monitor>
+        TARGET_HOSTNAME     ::= <FQDN of the target>
+        TIMESTAMP           ::= <Unix Time of the MTR>
+        NOTICE_METHOD       ::= "webhook" | "email" | "finish"
+
+  3. At present, the client is expected to initiate its first connection with the "webhook"
+     or "email" methods. These methods leave the test data on the server. The client can instruct
+     the server to delete the data and its index by calling the "finish" method. Until the finish
+     method is called, any tests for a target which has been tested previously will be added to
+     to the existing collection.
+        * The server will "age" tests such that they will be removed automatically
+          after eg. 30 minutes.
+
+  4. The client is NOT expected to hold open the TLS connection to send new instructions.
+
+  5. The client is NOT expected to offer any authentication other than its certificate, nor to
+     offer any authentication information to be used for the transmission of the collected tests.
+

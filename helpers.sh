@@ -10,6 +10,12 @@ function send_msg {
     done
 }
 
+function send_crted {
+    for arg in "$@"; do
+        echo -e "$arg" | openssl s_client -connect 127.0.0.1:22123 -cert cert.pem -key key.pem
+    done
+}
+
 # Won't work with ssl!
 function dump2tcp {
     echo "$1" > /dev/tcp/127.0.0.1/22123
